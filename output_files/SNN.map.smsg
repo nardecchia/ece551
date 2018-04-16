@@ -1,0 +1,5 @@
+Info (10281): Verilog HDL Declaration information at uart_tx.sv(4): object "tx" differs only in case from object "TX" in the same scope File: I:/ECE551/hw03/SNN/uart_tx.sv Line: 4
+Info (10281): Verilog HDL Declaration information at uart_tx.sv(10): object "BAUD" differs only in case from object "baud" in the same scope File: I:/ECE551/hw03/SNN/uart_tx.sv Line: 10
+Info (10281): Verilog HDL Declaration information at uart_rx.sv(2): object "rx" differs only in case from object "RX" in the same scope File: I:/ECE551/hw03/SNN/uart_rx.sv Line: 2
+Info (10281): Verilog HDL Declaration information at uart_rx.sv(10): object "BAUD" differs only in case from object "baud" in the same scope File: I:/ECE551/hw03/SNN/uart_rx.sv Line: 10
+Info (10281): Verilog HDL Declaration information at uart_rx.sv(9): object "HALF_BAUD" differs only in case from object "half_baud" in the same scope File: I:/ECE551/hw03/SNN/uart_rx.sv Line: 9

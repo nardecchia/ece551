@@ -1,0 +1,7 @@
+
+State Machine - |SNN|uart_rx:iDUT1|state
+Name state.TAIL state.RX state.LEAD state.IDLE 
+state.IDLE 0 0 0 0 
+state.LEAD 0 0 1 1 
+state.RX 0 1 0 1 
+state.TAIL 1 0 0 1 

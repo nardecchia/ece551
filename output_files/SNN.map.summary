@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Fri Apr 13 11:55:49 2018
+Quartus Prime Version : 16.0.0 Build 211 04/27/2016 SJ Lite Edition
+Revision Name : SNN
+Top-level Entity Name : SNN
+Family : Cyclone IV E
+Total logic elements : 91
+    Total combinational functions : 81
+    Dedicated logic registers : 59
+Total registers : 59
+Total pins : 12
+Total virtual pins : 0
+Total memory bits : 0
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 0
