@@ -4,8 +4,9 @@ reg [7:0] in1,in2;
 reg clk,rst_n,clr_n;
 
 wire [25:0] acc;
+wire [10:0] acc_out;
 
-mac iDUT(in1,in2,clk,rst_n,acc,clr_n);
+mac iDUT(in1,in2,clk,rst_n,acc,acc_out,clr_n);
 
 
 initial begin
@@ -45,8 +46,8 @@ in2 = 126;
 #10 rst_n = 1;
     clr_n = 1;
 
-in1 = 126;       // third calculation
-in2 = -126;
+in1 = 12600000;       // third calculation
+in2 = -12600000;
 
 #30;
 
