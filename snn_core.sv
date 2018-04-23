@@ -10,7 +10,6 @@ wire count_L1, count_L2;		// counters for state transitions
 reg [9:0] count;
 reg [5:0] node_count;
 reg clr_count, inc_ncount, clr_ncount;
-wire [3:0] digit_logic;
 wire [7:0] sext_q;
 reg [7:0] mac_a, mac_b;
 wire [10:0] mac_out;
@@ -76,7 +75,8 @@ always_comb begin
 	inc_ncount = 0;
 	clr_ncount = 1;
 	done = 0;
-	digit = 4'h0;
+	digit = output_digit;
+	//digit = 4'h0;
 	mac_clr_n = 0;
 	mac_a = sext_q;
 	mac_b = rom_hw_q;
@@ -86,7 +86,6 @@ always_comb begin
 
 	case (state)
 		IDLE: begin
-			output_clr = 1;
 			if (start)
 				next_state = LAYER1;
 		end
@@ -124,6 +123,7 @@ always_comb begin
 		L1_L2_BUFFER: begin
 			// exists so node_count gets reset before and rom output weight
 			// appears on its output before entering LAYER2
+			output_clr = 1;
 			mac_clr_n = 0;
 			clr_ncount = 0;
 			clr_count = 0;
