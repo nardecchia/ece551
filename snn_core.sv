@@ -54,17 +54,17 @@ mac MAC0(.a(mac_a), .b(mac_b), .clr_n(mac_clr_n),
 	     .acc(mac_out), .clk(clk), .rst_n(rst_n));
 
 /* ram and rom instantiation */
-ram #(.DATA_WIDTH(8), .ADDR_WIDTH(15), . FILE_IN(""))
+ram #(.DATA_WIDTH(8), .ADDR_WIDTH(15), .FILE_IN("ram_hidden_contents.txt"))
 	hidden_unit(.data(rom_lut_q), .addr(ram_h_addr),
 				.we(ram_h_we), .q(ram_h_q), .clk(clk));
 /*ram #(.DATA_WIDTH(8), .ADDR_WIDTH(4), . FILE_IN(""))
 	output_unit(.data(rom_lut_q), .addr(ram_o_addr),
 				.we(ram_o_we), .q(ram_o_q), .clk(clk));*/
-rom #(.DATA_WIDTH(8), .ADDR_WIDTH(15), . FILE_IN(""))
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(15), .FILE_IN("rom_hidden_weight_contents.txt"))
 	hidden_weight(.addr(rom_hw_addr), .q(rom_hw_q), .clk(clk));
-rom #(.DATA_WIDTH(8), .ADDR_WIDTH(9), . FILE_IN(""))
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(9), .FILE_IN("rom_output_weight_contents.txt"))
 	output_weight(.addr(rom_ow_addr), .q(rom_ow_q), .clk(clk));
-rom #(.DATA_WIDTH(8), .ADDR_WIDTH(11), . FILE_IN(""))
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(11), .FILE_IN("rom_act_func_lut_contents.txt"))
 	act_func_lut(.addr(mac_out), .q(rom_lut_q), .clk(clk));
 
 /* state machine logic
