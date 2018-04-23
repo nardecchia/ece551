@@ -17,15 +17,19 @@ wire[10:0] mac_out;
 reg mac_clr_n;
 
 reg [4:0] ram_h_addr;
-reg [3:0] ram_o_addr;
-reg ram_h_we, ram_o_we;
-wire [7:0] ram_h_q, ram_o_q;
+//reg [3:0] ram_o_addr;
+reg ram_h_we;// ram_o_we;
+wire [7:0] ram_h_q;// ram_o_q;
 wire [14:0] rom_hw_addr;
 reg [8:0] rom_ow_addr;
 wire [7:0] rom_hw_q, rom_ow_q, rom_lut_q;
+reg output_clr;
+reg output_comp_en;
+reg [3:0] output_digit, gt_digit;
+reg [7:0] output_value, gt_value;
 
 /* State definiitons */
-typedef enum reg [3:0] {IDLE, LAYER1, L1_MAC_CLR, L1_LUT_WRITE, L1_L2_BUFFER, LAYER2, OUTPUT} state_t;
+typedef enum reg [3:0] {IDLE, LAYER1, L1_MAC_CLR, L1_LUT_WRITE, L1_L2_BUFFER, LAYER2, L2_MAC_CLR, L2_LUT_WRITE, OUTPUT} state_t;
 state_t state, next_state;
 
 /* counting logic */
@@ -33,6 +37,10 @@ assign count_L1 = (count == 10'h310) ? 1'b1 : 1'b0;			// 0x310 is 784
 assign count_L2 = (count == 10'h20) ? 1'b1 : 1'b0;			// 0x20 is 32
 assign count_hidden = (node_count == 6'h20) ? 1'b1 : 1'b0;		// 0x20 is 32
 assign count_output = (node_count == 6'hA) ? 1'b1 : 1'b0;		// 0xA is 10
+
+/* output comparing logic */
+assign gt_value = (output_value > rom_lut_q) ? output_value : rom_lut_q;
+assign gt_digit = (output_value > rom_lut_q) ? output_digit : (node_count - 1);
 
 /* misc logic */
 assign addr_input_unit = count;
@@ -46,11 +54,18 @@ mac MAC0(.a(mac_a), .b(mac_b), .clr_n(mac_clr_n),
 	     .acc(mac_out), .clk(clk), .rst_n(rst_n));
 
 /* ram and rom instantiation */
-ram hidden_unit(.data(rom_lut_q), .addr(ram_h_addr), .we(ram_h_we), .q(ram_h_q), .clk(clk));	// dw 8 aw 5
-ram output_unit(.data(rom_lut_q), .addr(ram_o_addr), .we(ram_o_we), .q(ram_o_q), .clk(clk));	// dw 8 aw 4
-rom hidden_weight(.addr(rom_hw_addr), .q(rom_hw_q), .clk(clk));				// dw 8 aw 15
-rom output_weight(.addr(rom_ow_addr), .q(rom_ow_q), .clk(clk));				// dw 8 aw 9
-rom act_func_lut(.addr(mac_out), .q(rom_lut_q), .clk(clk));					// dw 8 aw 11
+ram #(.DATA_WIDTH(8), .ADDR_WIDTH(15), . FILE_IN(""))
+	hidden_unit(.data(rom_lut_q), .addr(ram_h_addr),
+				.we(ram_h_we), .q(ram_h_q), .clk(clk));
+/*ram #(.DATA_WIDTH(8), .ADDR_WIDTH(4), . FILE_IN(""))
+	output_unit(.data(rom_lut_q), .addr(ram_o_addr),
+				.we(ram_o_we), .q(ram_o_q), .clk(clk));*/
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(15), . FILE_IN(""))
+	hidden_weight(.addr(rom_hw_addr), .q(rom_hw_q), .clk(clk));
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(9), . FILE_IN(""))
+	output_weight(.addr(rom_ow_addr), .q(rom_ow_q), .clk(clk));
+rom #(.DATA_WIDTH(8), .ADDR_WIDTH(11), . FILE_IN(""))
+	act_func_lut(.addr(mac_out), .q(rom_lut_q), .clk(clk));
 
 /* state machine logic
 */
@@ -66,10 +81,12 @@ always_comb begin
 	mac_a = sext_q;
 	mac_b = rom_hw_q;
 	ram_h_we = 0;
-	ram_o_we = 0;
+	output_comp_en = 0;
+	output_clr = 0;
 
 	case (state)
 		IDLE: begin
+			output_clr = 1;
 			if (start)
 				next_state = LAYER1;
 		end
@@ -112,16 +129,41 @@ always_comb begin
 			clr_count = 0;
 			next_state = LAYER2;
 		end
-		/* I haven't been working on these
 		LAYER2: begin
 			mac_clr_n = 1;
 			clr_count = 0;
 			clr_ncount = 0;
+			mac_a = ram_h_q;
+			mac_b = rom_ow_q;
+			if (count_L2) begin
+				next_state = L2_MAC_CLR;
+				clr_count = 1;
+			end
+		end
+		L2_MAC_CLR: begin
+			mac_clr_n = 0;
+			clr_ncount = 0;
+			inc_ncount = 1;
+			next_state = L2_LUT_WRITE;
+		end
+		L2_LUT_WRITE: begin
+			mac_clr_n = 0;
+			output_comp_en = 1;
+			clr_ncount = 0;
+			clr_count = 0;
+			if (count_output) begin
+				next_state = OUTPUT;
+				clr_ncount = 1;
+				clr_count = 1;
+			end
+			else begin
+				next_state = LAYER2;
+			end
 		end
 		default: begin			// OUTPUT state
 			done = 1;
-			digit = digit_logic;
-		end*/
+			digit = output_digit;
+		end
 	endcase
 end
 
@@ -139,6 +181,7 @@ end
 always @(posedge clk, negedge rst_n) begin
 	if (!rst_n) begin
 		count <= 0;
+	end
 	else begin
 		if (clr_count)
 			count <= 0;
@@ -155,12 +198,37 @@ always @(posedge clk, negedge rst_n) begin
 	else begin
 		if (clr_ncount)
 			node_count <= 0;
-		else
+		else begin
 			if (inc_ncount)
 				node_count <= node_count + 1'b1;
 			else
 				node_count <= node_count;
+		end
 	end
 end
+
+/* digit compare flop and logic
+*/
+always @(posedge clk, negedge rst_n) begin
+	if (!rst_n) begin
+		output_digit <= 0;
+		output_value <= 0;
+	end
+	else begin
+		if (output_clr) begin
+			output_digit <= 0;
+			output_value <= 0;
+		end
+		else if (output_comp_en) begin
+			output_digit <= gt_digit;
+			output_digit <= gt_value;
+		end
+		else begin
+			output_digit <= output_digit;
+			output_value <= output_value;
+		end
+	end
+end
+
 
 endmodule
