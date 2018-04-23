@@ -12,8 +12,8 @@ reg [5:0] node_count;
 reg clr_count, inc_ncount, clr_ncount;
 wire [3:0] digit_logic;
 wire [7:0] sext_q;
-wire[7:0] mac_a, mac_b;
-wire[10:0] mac_out;
+reg [7:0] mac_a, mac_b;
+wire [10:0] mac_out;
 reg mac_clr_n;
 
 reg [4:0] ram_h_addr;
@@ -195,6 +195,7 @@ end
 always @(posedge clk, negedge rst_n) begin
 	if (!rst_n) begin
 		node_count <= 0;
+	end
 	else begin
 		if (clr_ncount)
 			node_count <= 0;
