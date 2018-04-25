@@ -8,7 +8,7 @@ module rom (addr, clk, q);
  // Declare the ROM variable
  reg [DATA_WIDTH-1:0] rom[2**ADDR_WIDTH-1:0];
  initial begin
- readmemh(FILE_IN, rom);
+	$readmemh(FILE_IN, rom);
  end
  always @ (posedge clk)
  begin

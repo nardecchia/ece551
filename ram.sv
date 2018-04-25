@@ -12,7 +12,7 @@ module ram (data, addr, we, clk, q);
  reg [ADDR_WIDTH-1:0] addr_reg;
 
  initial begin
- readmemh(FILE_IN, ram);
+	$readmemh(FILE_IN, ram);
  end
 
  always @ (posedge clk)
