@@ -44,16 +44,16 @@ assign gt_digit = (output_value > rom_lut_q) ? output_digit : (node_count - 1);
 /* misc logic */
 assign addr_input_unit = count;
 assign sext_q = {1'b0, {7{q_input}}};
-assign ram_h_addr = node_count - 1'b1;		// -1 because node_count was
+assign ram_h_addr = node_count[4:0] - 1'b1;		// -1 because node_count was
 				//incremented in L1_MAC_CLR state before we could use it
 assign rom_hw_addr = {node_count[4:0], count};
 
 /* mac module instantiation */
-mac MAC0(.a(mac_a), .b(mac_b), .clr_n(mac_clr_n),
-	     .acc(mac_out), .clk(clk), .rst_n(rst_n));
+mac MAC0(.in1(mac_a), .in2(mac_b), .clr_n(mac_clr_n),
+	     .acc_out(mac_out), .clk(clk), .rst_n(rst_n), .acc());
 
 /* ram and rom instantiation */
-ram #(.DATA_WIDTH(8), .ADDR_WIDTH(15), .FILE_IN("ram_hidden_contents.txt"))
+ram #(.DATA_WIDTH(8), .ADDR_WIDTH(5), .FILE_IN("ram_hidden_contents.txt"))
 	hidden_unit(.data(rom_lut_q), .addr(ram_h_addr),
 				.we(ram_h_we), .q(ram_h_q), .clk(clk));
 /*ram #(.DATA_WIDTH(8), .ADDR_WIDTH(4), . FILE_IN(""))
@@ -99,6 +99,8 @@ always_comb begin
 				next_state = L1_MAC_CLR;
 				clr_count = 1;
 			end
+			else
+				next_state = LAYER1;
 		end
 		L1_MAC_CLR: begin
 			mac_clr_n = 0;
@@ -139,6 +141,8 @@ always_comb begin
 				next_state = L2_MAC_CLR;
 				clr_count = 1;
 			end
+			else
+				next_state = LAYER2;
 		end
 		L2_MAC_CLR: begin
 			mac_clr_n = 0;
