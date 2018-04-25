@@ -26,6 +26,7 @@ reg output_clr;
 reg output_comp_en;
 reg [3:0] output_digit, gt_digit;
 reg [7:0] output_value, gt_value;
+wire [11:0] rom_lut_addr;
 
 /* State definiitons */
 typedef enum reg [3:0] {IDLE, LAYER1, L1_MAC_CLR, L1_LUT_WRITE, L1_L2_BUFFER, LAYER2, L2_MAC_CLR, L2_LUT_WRITE, OUTPUT} state_t;
@@ -34,7 +35,7 @@ state_t state, next_state;
 /* counting logic */
 assign count_L1 = (count == 10'h30F) ? 1'b1 : 1'b0;				// 783
 assign count_L2 = (count == 10'h1F) ? 1'b1 : 1'b0;				// 31
-assign count_hidden = (node_count == 6'h1F) ? 1'b1 : 1'b0;		// 31
+assign count_hidden = (node_count == 6'h20) ? 1'b1 : 1'b0;		// 32
 assign count_output = (node_count == 6'h9) ? 1'b1 : 1'b0;		// 9
 
 /* output comparing logic */
@@ -48,6 +49,7 @@ assign ram_h_addr = node_count[4:0] - 1'b1;		// -1 because node_count was
 				//incremented in L1_MAC_CLR state before we could use it
 assign rom_hw_addr = {node_count[4:0], count};
 assign rom_ow_addr = {node_count[3:0], count[4:0]};
+assign rom_lut_addr = mac_out + 11'h400;		// rect(mac) + 1024
 
 /* mac module instantiation */
 mac MAC0(.in1(mac_a), .in2(mac_b), .clr_n(mac_clr_n),
@@ -65,7 +67,7 @@ rom #(.DATA_WIDTH(8), .ADDR_WIDTH(15), .FILE_IN("rom_hidden_weight_contents.txt"
 rom #(.DATA_WIDTH(8), .ADDR_WIDTH(9), .FILE_IN("rom_output_weight_contents.txt"))
 	output_weight(.addr(rom_ow_addr), .q(rom_ow_q), .clk(clk));
 rom #(.DATA_WIDTH(8), .ADDR_WIDTH(11), .FILE_IN("rom_act_func_lut_contents.txt"))
-	act_func_lut(.addr(mac_out), .q(rom_lut_q), .clk(clk));
+	act_func_lut(.addr(rom_lut_addr), .q(rom_lut_q), .clk(clk));
 
 /* state machine logic
 */
