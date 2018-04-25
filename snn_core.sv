@@ -32,10 +32,10 @@ typedef enum reg [3:0] {IDLE, LAYER1, L1_MAC_CLR, L1_LUT_WRITE, L1_L2_BUFFER, LA
 state_t state, next_state;
 
 /* counting logic */
-assign count_L1 = (count == 10'h310) ? 1'b1 : 1'b0;			// 0x310 is 784
-assign count_L2 = (count == 10'h20) ? 1'b1 : 1'b0;			// 0x20 is 32
-assign count_hidden = (node_count == 6'h20) ? 1'b1 : 1'b0;		// 0x20 is 32
-assign count_output = (node_count == 6'hA) ? 1'b1 : 1'b0;		// 0xA is 10
+assign count_L1 = (count == 10'h30F) ? 1'b1 : 1'b0;				// 783
+assign count_L2 = (count == 10'h1F) ? 1'b1 : 1'b0;				// 31
+assign count_hidden = (node_count == 6'h1F) ? 1'b1 : 1'b0;		// 31
+assign count_output = (node_count == 6'h9) ? 1'b1 : 1'b0;		// 9
 
 /* output comparing logic */
 assign gt_value = (output_value > rom_lut_q) ? output_value : rom_lut_q;
@@ -47,6 +47,7 @@ assign sext_q = {1'b0, {7{q_input}}};
 assign ram_h_addr = node_count[4:0] - 1'b1;		// -1 because node_count was
 				//incremented in L1_MAC_CLR state before we could use it
 assign rom_hw_addr = {node_count[4:0], count};
+assign rom_ow_addr = {node_count[3:0], count[4:0]};
 
 /* mac module instantiation */
 mac MAC0(.in1(mac_a), .in2(mac_b), .clr_n(mac_clr_n),
