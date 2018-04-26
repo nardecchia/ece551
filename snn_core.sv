@@ -26,7 +26,7 @@ reg output_clr;
 reg output_comp_en;
 reg [3:0] output_digit, gt_digit;
 reg [7:0] output_value, gt_value;
-wire [11:0] rom_lut_addr;
+wire [10:0] rom_lut_addr;
 
 /* State definiitons */
 typedef enum reg [3:0] {IDLE, LAYER1, L1_MAC_CLR, L1_LUT_WRITE, L1_L2_BUFFER, LAYER2, L2_MAC_CLR, L2_LUT_WRITE, OUTPUT} state_t;
@@ -34,19 +34,19 @@ state_t state, next_state;
 
 /* counting logic */
 assign count_L1 = (count == 10'h30F) ? 1'b1 : 1'b0;				// 783
-assign count_L2 = (count == 10'h1F) ? 1'b1 : 1'b0;				// 31
+assign count_L2 = (count == 10'h20) ? 1'b1 : 1'b0;				// 32
 assign count_hidden = (node_count == 6'h20) ? 1'b1 : 1'b0;		// 32
-assign count_output = (node_count == 6'h9) ? 1'b1 : 1'b0;		// 9
+assign count_output = (node_count == 6'hA) ? 1'b1 : 1'b0;		// 10
 
 /* output comparing logic */
 assign gt_value = (output_value > rom_lut_q) ? output_value : rom_lut_q;
-assign gt_digit = (output_value > rom_lut_q) ? output_digit : (node_count - 1);
+assign gt_digit = (output_value > rom_lut_q) ? output_digit : (node_count - 1'b1);
 
 /* misc logic */
 assign addr_input_unit = count;
 assign sext_q = {1'b0, {7{q_input}}};
-assign ram_h_addr = node_count[4:0] - 1'b1;		// -1 because node_count was
-				//incremented in L1_MAC_CLR state before we could use it
+//assign ram_h_addr = count[4:0] - 1'b1;		// -1 because count was
+				//incremented in L1_LUT_WRITE state before we could use it
 assign rom_hw_addr = {node_count[4:0], count};
 assign rom_ow_addr = {node_count[3:0], count[4:0]};
 assign rom_lut_addr = mac_out + 11'h400;		// rect(mac) + 1024
@@ -86,6 +86,7 @@ always_comb begin
 	ram_h_we = 0;
 	output_comp_en = 0;
 	output_clr = 0;
+	ram_h_addr = count[4:0]; // default for Layer 2 state
 
 	case (state)
 		IDLE: begin
@@ -116,6 +117,8 @@ always_comb begin
 			ram_h_we = 1;
 			clr_ncount = 0;
 			clr_count = 0;
+			ram_h_addr = node_count[4:0] - 1'b1;// -1 because node_count was
+				//incremented in L1_MAC_CLR state before we could use it
 			if (count_hidden) begin
 				next_state = L1_L2_BUFFER;
 				clr_ncount = 1;
@@ -229,7 +232,7 @@ always @(posedge clk, negedge rst_n) begin
 		end
 		else if (output_comp_en) begin
 			output_digit <= gt_digit;
-			output_digit <= gt_value;
+			output_value <= gt_value;
 		end
 		else begin
 			output_digit <= output_digit;
