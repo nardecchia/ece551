@@ -51,7 +51,7 @@ module SNN(clk, sys_rst_n, led, uart_tx, uart_rx);
 				//     ^^^ this could be wrong. might need to make a module that fill RAM and outputs a signal when its full? 
 
 	//*** instantiate ram
-	ram (.data(rx_data), .addr(addr_input_unit), .we(rx_rdy), .clk(clk), .q(q_input));
+	ram iDUT_ram(.data(rx_data), .addr(addr_input_unit), .we(rx_rdy), .clk(clk), .q(q_input));
 	
 
 	// Instantiate UART_RX and UART_TX and connect them below
